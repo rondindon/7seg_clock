@@ -1,18 +1,11 @@
-/* Blink Example
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
-#include <time.h>
+// #include <time.h>
 
 //7SEG PINS
 
@@ -41,17 +34,15 @@
 
 #define ledColon    27
 
+// time_t seconds;
+// struct tm *timeStruct;
 
-time_t seconds;
-struct tm *timeStruct;
+// seconds = time(NULL);
 
-seconds = time(NULL);
-
-timeStruct = localtime(&seconds);
+// timeStruct = localtime(&seconds);
 
 unsigned char count = 0;
 unsigned char display = 0;
-
 
 int pins[7] = {dPin,cPin,ePin,gPin,fPin,aPin,bPin};
 int hex[10][7] =    {{1,1,1,0,1,1,1}, //0
@@ -65,7 +56,7 @@ int hex[10][7] =    {{1,1,1,0,1,1,1}, //0
                      {1,1,1,1,1,1,1}, //8
                      {1,1,0,1,1,1,1}, //9
                      };
-unsigned char count = 0;
+
 void board_config(){
     gpio_reset_pin(cPin);
     gpio_reset_pin(dPin);
@@ -109,19 +100,27 @@ void board_config(){
     gpio_set_direction(a4ControlPin, GPIO_MODE_OUTPUT);
 }
 
-bool edit_pressed()
-{
-    return (gpio_get_level(btn1Pin) == 0);
-}
+// bool edit_pressed()
+// {
+//     return (gpio_get_level(btn1Pin) == 0);
+// }
 
-bool next_pressed()
-{
-    return (gpio_get_level(btn2Pin) == 0);
-}
+// bool next_pressed()
+// {
+//     return (gpio_get_level(btn2Pin) == 0);
+// }
 
-bool confirm_pressed()
-{
-    return (gpio_get_level(btn3Pin) == 0);
+// bool confirm_pressed()
+// {
+//     return (gpio_get_level(btn3Pin) == 0);
+// }
+
+void display() {
+        for(int i = 0; i < 9; i++){
+
+            gpio_set_level(pins[i], hex[0][i]);
+            
+        }
 }
 
 
@@ -131,14 +130,13 @@ void app_main(void)
     while (1)
     {
 
-        gpio_set_direction(ledColon,1);
-        gpio_set_direction(a1ControlPin,0)
+        gpio_set_level(ledColon,1);
+        gpio_set_level(a1ControlPin,0);
+        gpio_set_level(a2ControlPin,0);
+        gpio_set_level(a3ControlPin,0);
+        gpio_set_level(a4ControlPin,0);
         
-        for(int i = 0; i < 9; i++){
-
-            gpio_set_level(pins[i], hex[0][i]);
-            
-        }
+      display();
 
     }
     
