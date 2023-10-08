@@ -1,11 +1,10 @@
-
-#include <stdio.h>
+#include "stdio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
-// #include <time.h>
+#include "time.h"
 
 //7SEG PINS
 
@@ -41,8 +40,16 @@
 
 // timeStruct = localtime(&seconds);
 
+unsigned char dstmin = 0;
+unsigned char min = 0;
+unsigned char dstsec = 0;
+unsigned char sec = 0;
+
 unsigned char count = 0;
-unsigned char display = 0;
+
+int tm_sec;
+int tm_min;
+
 
 int pins[7] = {dPin,cPin,ePin,gPin,fPin,aPin,bPin};
 int hex[10][7] =    {{1,1,1,0,1,1,1}, //0
@@ -92,12 +99,12 @@ void board_config(){
     gpio_set_direction(btn3Pin, GPIO_MODE_INPUT);
     gpio_set_pull_mode(btn3Pin, GPIO_PULLUP_ONLY);
 
-    gpio_set_direction(ledColon, GPIO_MODE_OUTPUT);
+    gpio_set_direction(ledColon, GPIO_MODE_INPUT_OUTPUT);
 
-    gpio_set_direction(a1ControlPin, GPIO_MODE_OUTPUT);
-    gpio_set_direction(a2ControlPin, GPIO_MODE_OUTPUT);
-    gpio_set_direction(a3ControlPin, GPIO_MODE_OUTPUT);
-    gpio_set_direction(a4ControlPin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(a1ControlPin, GPIO_MODE_INPUT_OUTPUT);
+    gpio_set_direction(a2ControlPin, GPIO_MODE_INPUT_OUTPUT);
+    gpio_set_direction(a3ControlPin, GPIO_MODE_INPUT_OUTPUT);
+    gpio_set_direction(a4ControlPin, GPIO_MODE_INPUT_OUTPUT);
 }
 
 // bool edit_pressed()
@@ -115,28 +122,49 @@ void board_config(){
 //     return (gpio_get_level(btn3Pin) == 0);
 // }
 
-void display() {
-        for(int i = 0; i < 9; i++){
 
-            gpio_set_level(pins[i], hex[0][i]);
-            
-        }
-}
-
-
-void app_main(void)
-{
+void app_main(void){
     board_config();
+
     while (1)
     {
-
+        gpio_set_level(a4ControlPin,1);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        sec++;
         gpio_set_level(ledColon,1);
-        gpio_set_level(a1ControlPin,0);
-        gpio_set_level(a2ControlPin,0);
-        gpio_set_level(a3ControlPin,0);
+        gpio_set_level(a4ControlPin,1);
+        gpio_set_level(a2ControlPin,1);
+        gpio_set_level(a3ControlPin,1);
+        gpio_set_level(a1ControlPin,1);
+
+        if(gpio_get_level(a4ControlPin)){
+            for(int i = 0; i < 9; i++){
+                gpio_set_level(pins[i], hex[sec][i]);
+                if(sec == 10){
+                    sec = 0;
+                    dstsec++;
+                }
+            }
+            
+        }
+
         gpio_set_level(a4ControlPin,0);
+        gpio_set_level(a3ControlPin,1);
+
+        if(a3ControlPin){
+            for(int i = 0; i < 9; i++){
+                gpio_set_level(pins[i], hex[dstsec][i]);
+                if(dstsec == 6){
+                    dstsec = 0;
+                    min++;
+                }
+            }
+        }
+
+        gpio_set_level(a3ControlPin,0);
+
         
-      display();
+        
 
     }
     

@@ -1,3 +1,10 @@
 {
-  "C_Cpp.intelliSenseEngine": "Tag Parser"
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "files.associations": {
+    "*.embeddedhtml": "html",
+    "chrono": "c",
+    "random": "c",
+    "limits": "c",
+    "task.h": "c"
+  }
 }
