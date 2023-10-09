@@ -145,7 +145,6 @@ void app_main(void){
                     dstsec++;
                 }
             }
-            
         }
 
         gpio_set_level(a4ControlPin,0);
