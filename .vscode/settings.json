@@ -5,6 +5,10 @@
     "chrono": "c",
     "random": "c",
     "limits": "c",
-    "task.h": "c"
-  }
+    "task.h": "c",
+    "bitset": "c",
+    "memory": "c",
+    "future": "c"
+  },
+  "idf.adapterTargetName": "esp32"
 }

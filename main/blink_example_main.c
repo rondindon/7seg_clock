@@ -40,16 +40,12 @@
 
 // timeStruct = localtime(&seconds);
 
-unsigned char dstmin = 0;
-unsigned char min = 0;
-unsigned char dstsec = 0;
-unsigned char sec = 0;
+static const char *TAG = "example";
 
-unsigned char count = 0;
-
-int tm_sec;
-int tm_min;
-
+uint8_t  dstmin = 0;
+uint8_t  min = 0;
+uint8_t  dstsec = 0;
+uint8_t sec = 0;
 
 int pins[7] = {dPin,cPin,ePin,gPin,fPin,aPin,bPin};
 int hex[10][7] =    {{1,1,1,0,1,1,1}, //0
@@ -107,64 +103,101 @@ void board_config(){
     gpio_set_direction(a4ControlPin, GPIO_MODE_INPUT_OUTPUT);
 }
 
-// bool edit_pressed()
-// {
-//     return (gpio_get_level(btn1Pin) == 0);
-// }
+bool edit_pressed()
+{
+    return (gpio_get_level(btn1Pin) == 0);
+}
 
-// bool next_pressed()
-// {
-//     return (gpio_get_level(btn2Pin) == 0);
-// }
+bool next_pressed()
+{
+    return (gpio_get_level(btn2Pin) == 0);
+}
 
-// bool confirm_pressed()
-// {
-//     return (gpio_get_level(btn3Pin) == 0);
-// }
+bool confirm_pressed()
+{
+    return (gpio_get_level(btn3Pin) == 0);
+}
+
+void counter(){
+    if(sec==10){
+        sec=0;
+        dstsec++;
+    }
+    
+    if (dstsec==6){
+        dstsec=0;
+        min++;
+    }
+
+    if(min == 10){
+        min = 0;
+        dstmin++;
+    }
+
+}
+
+void seg_reset(){
+    gpio_set_level(a1ControlPin,0);
+    gpio_set_level(a2ControlPin,0);
+    gpio_set_level(a3ControlPin,0);
+    gpio_set_level(a4ControlPin,0);
+}
 
 
 void app_main(void){
     board_config();
+    gpio_set_level(ledColon,1);
 
-    while (1)
-    {
-        gpio_set_level(a4ControlPin,1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        sec++;
-        gpio_set_level(ledColon,1);
-        gpio_set_level(a4ControlPin,1);
-        gpio_set_level(a2ControlPin,1);
-        gpio_set_level(a3ControlPin,1);
-        gpio_set_level(a1ControlPin,1);
+    while (1){
 
-        if(gpio_get_level(a4ControlPin)){
-            for(int i = 0; i < 9; i++){
-                gpio_set_level(pins[i], hex[sec][i]);
-                if(sec == 10){
-                    sec = 0;
-                    dstsec++;
+        ESP_LOGW(TAG,"sekunda");
+
+        for(int j = 0; j < 26; j++){
+            gpio_set_level(a1ControlPin,0);
+            gpio_set_level(a2ControlPin,0);
+            gpio_set_level(a3ControlPin,0);
+            gpio_set_level(a4ControlPin,1);
+
+            if (gpio_get_level(a4ControlPin)){
+                for(int i = 0; i < 7; i++){
+                    gpio_set_level(pins[i], hex[sec][i]);
+                    }
+            }
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            gpio_set_level(a4ControlPin,0);
+            gpio_set_level(a3ControlPin,1);
+            if (gpio_get_level(a3ControlPin)){
+                for(int i = 0; i < 7; i++){
+                    gpio_set_level(pins[i], hex[dstsec][i]);
+                    }
+            }
+            vTaskDelay(10 / portTICK_PERIOD_MS);            
+            gpio_set_level(a3ControlPin,0);
+            gpio_set_level(a2ControlPin,1);
+            if (gpio_get_level(a2ControlPin)){
+                for(int i = 0; i < 7; i++){
+                    gpio_set_level(pins[i], hex[min][i]);
                 }
             }
-        }
-
-        gpio_set_level(a4ControlPin,0);
-        gpio_set_level(a3ControlPin,1);
-
-        if(a3ControlPin){
-            for(int i = 0; i < 9; i++){
-                gpio_set_level(pins[i], hex[dstsec][i]);
-                if(dstsec == 6){
-                    dstsec = 0;
-                    min++;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            gpio_set_level(a2ControlPin,0);
+            gpio_set_level(a1ControlPin,1);
+            if (gpio_get_level(a1ControlPin)){
+                for(int i = 0; i < 7; i++){
+                    gpio_set_level(pins[i], hex[dstmin][i]);
                 }
             }
+
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            if(j == 25){
+                ESP_LOGW(TAG,"sekunda");
+                sec++;
+                counter();
+                j = 0;
+            }
+
         }
-
-        gpio_set_level(a3ControlPin,0);
-
-        
-        
 
     }
-    
+
 }
