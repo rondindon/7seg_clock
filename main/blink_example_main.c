@@ -26,7 +26,7 @@
 // BUTTONS
 
 #define btn1Pin     25
-#define btn2Pin     26
+#define btn2Pin     22
 #define btn3Pin     33
 
 // COLON
@@ -46,6 +46,7 @@ uint8_t  dstmin = 0;
 uint8_t  min = 0;
 uint8_t  dstsec = 0;
 uint8_t sec = 0;
+
 
 int pins[7] = {dPin,cPin,ePin,gPin,fPin,aPin,bPin};
 int hex[10][7] =    {{1,1,1,0,1,1,1}, //0
@@ -108,7 +109,7 @@ bool edit_pressed()
     return (gpio_get_level(btn1Pin) == 0);
 }
 
-bool next_pressed()
+bool add()
 {
     return (gpio_get_level(btn2Pin) == 0);
 }
@@ -128,10 +129,20 @@ void counter(){
         dstsec=0;
         min++;
     }
+    if (dstsec==9 && sec==9 ){
+       dstsec=0;
+       sec=0;
+    }
+    
 
     if(min == 10){
         min = 0;
         dstmin++;
+    }
+
+    if (dstmin==9 && min==9 ){
+       dstmin=0;
+       min=0;
     }
 
 }
@@ -143,27 +154,38 @@ void seg_reset(){
     gpio_set_level(a4ControlPin,0);
 }
 
+void shining(){
+
+        gpio_set_level(ledColon,1);
+        ESP_LOGI(TAG,"svieti");
+}
+
+
+void value_reset(){
+    dstmin=0;
+    min=0;
+    dstsec=0;
+    sec=0;
+}
+
+
 
 void app_main(void){
     board_config();
-    gpio_set_level(ledColon,1);
-
     while (1){
-
         ESP_LOGW(TAG,"sekunda");
 
-        for(int j = 0; j < 26; j++){
+        for(int j = 0; j < 14401; j++){
             gpio_set_level(a1ControlPin,0);
             gpio_set_level(a2ControlPin,0);
             gpio_set_level(a3ControlPin,0);
             gpio_set_level(a4ControlPin,1);
-
             if (gpio_get_level(a4ControlPin)){
                 for(int i = 0; i < 7; i++){
                     gpio_set_level(pins[i], hex[sec][i]);
                     }
             }
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            vTaskDelay(8 / portTICK_PERIOD_MS);
             gpio_set_level(a4ControlPin,0);
             gpio_set_level(a3ControlPin,1);
             if (gpio_get_level(a3ControlPin)){
@@ -171,7 +193,8 @@ void app_main(void){
                     gpio_set_level(pins[i], hex[dstsec][i]);
                     }
             }
-            vTaskDelay(10 / portTICK_PERIOD_MS);            
+            vTaskDelay(8 / portTICK_PERIOD_MS);
+            gpio_set_level(ledColon,0);
             gpio_set_level(a3ControlPin,0);
             gpio_set_level(a2ControlPin,1);
             if (gpio_get_level(a2ControlPin)){
@@ -179,18 +202,221 @@ void app_main(void){
                     gpio_set_level(pins[i], hex[min][i]);
                 }
             }
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            vTaskDelay(8 / portTICK_PERIOD_MS);
+            gpio_set_level(ledColon,0);
             gpio_set_level(a2ControlPin,0);
             gpio_set_level(a1ControlPin,1);
             if (gpio_get_level(a1ControlPin)){
                 for(int i = 0; i < 7; i++){
                     gpio_set_level(pins[i], hex[dstmin][i]);
+
                 }
             }
 
-            vTaskDelay(10 / portTICK_PERIOD_MS);
-            if(j == 25){
+            if(edit_pressed()){
+    
+                    bool edit = 1;
+                    while (edit_pressed()){
+                    vTaskDelay(1); 
+                    }
+                                        
+                    if(edit){
+
+                        ESP_LOGW(TAG,"edit");
+                        
+                        seg_reset();
+                        int x = 0;               
+
+                        while(x == 0){
+
+                            seg_reset();
+                            gpio_set_level(a1ControlPin,1);
+
+                            if(edit_pressed()){
+                                    x++;
+                                    ESP_LOGW(TAG,"zmena");
+                                    gpio_set_level(a2ControlPin,0);
+                                    gpio_set_level(a2ControlPin,1);
+                                    for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[min][i]);
+                                 }
+                                while (edit_pressed()){
+                                        vTaskDelay(1); 
+                                    }
+
+                                
+                            }
+                            if(add()){                                
+                                ESP_LOGW(TAG,"add");
+                                dstmin++;
+                                if (dstmin>9){
+                                    dstmin=0;
+                                }
+                                for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[dstmin][i]);
+
+                                }
+                                while (add()){
+                                        vTaskDelay(1); 
+                                    }
+
+                                }
+
+
+                        
+                            if(confirm_pressed()){
+                                ESP_LOGW(TAG,"confirm");
+                                while (confirm_pressed()){
+                                    vTaskDelay(1); 
+                                }
+                                break;
+                            
+                            }
+                        }
+
+                        while(x == 1){
+                            seg_reset();
+
+                            gpio_set_level(a2ControlPin,1);
+
+                            if(edit_pressed()){
+                                    x++;
+                                    gpio_set_level(a3ControlPin,0);
+                                    gpio_set_level(a3ControlPin,1);
+                                    for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[dstsec][i]);
+                                    ESP_LOGW(TAG,"zmena");
+                                    }
+                                while (edit_pressed()){
+                                        vTaskDelay(1); 
+                                    }
+                                    
+                                }
+                        
+                            if(add()){
+                                
+                                ESP_LOGW(TAG,"add");
+                                min++;
+                                if (min>9){
+                                    min=0;
+                                }                                
+                                for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[min][i]);
+
+                                }
+                                while (add()){
+                                        vTaskDelay(1); 
+                                    }
+                                
+                            }
+                            if(confirm_pressed()){
+                                ESP_LOGW(TAG,"confirm");
+                                while (confirm_pressed()){
+                                    vTaskDelay(1); 
+                                }
+                                break;
+                            }
+                        }
+
+                        while(x == 2){
+
+                            seg_reset();
+
+                            gpio_set_level(a3ControlPin,1);
+
+                            if(edit_pressed()){
+                                    x++;
+                                    ESP_LOGW(TAG,"zmena");
+                                    gpio_set_level(a4ControlPin,0);
+                                    gpio_set_level(a4ControlPin,1);
+                                    for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[sec][i]);
+                                    ESP_LOGW(TAG,"zmena");
+                                    }                                 
+                                while (edit_pressed()){
+                                        vTaskDelay(1); 
+                                    }
+                                    
+                                }
+                        
+                            if(add()){
+                                
+                                ESP_LOGW(TAG,"add");
+                                dstsec++;
+                                if (dstsec>9){
+                                    dstsec=0;
+                                }                                
+                                for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[dstsec][i]);
+
+                                }
+                                while (add()){
+                                        vTaskDelay(1); 
+                                    }
+
+                            }
+                            if(confirm_pressed()){
+                                ESP_LOGW(TAG,"confirm");
+                                while (confirm_pressed()){
+                                    vTaskDelay(1); 
+                                }
+                                break;
+                            }
+                        }
+
+                        while(x == 3){
+
+                            seg_reset();
+
+                            gpio_set_level(a4ControlPin,1);
+
+                            if(edit_pressed()){
+                                    x = 0;
+                                    ESP_LOGW(TAG,"zmena");
+                                    gpio_set_level(a1ControlPin,0);
+                                    gpio_set_level(a1ControlPin,1);
+                                    for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[dstmin][i]);
+                                    }
+                                while (edit_pressed()){
+                                        vTaskDelay(1); 
+                                    }
+                                    
+                                }
+                        
+                            if(add()){
+                                
+                                ESP_LOGW(TAG,"add");
+                                sec++;
+                                if (sec>9){
+                                    sec=0;
+                                }                                
+                                for(int i = 0; i < 7; i++){
+                                    gpio_set_level(pins[i], hex[sec][i]);
+
+                                }
+                                while (add()){
+                                        vTaskDelay(1); 
+                                    }
+                                
+                            }
+                            if(confirm_pressed()){
+                                ESP_LOGW(TAG,"confirm");
+                                while (confirm_pressed()){
+                                    vTaskDelay(1); 
+                                }
+                                break;
+                            }
+                        }
+
+                    }
+                }
+
+            vTaskDelay(8 / portTICK_PERIOD_MS);
+            if(j == 14400){
+                seg_reset();
                 ESP_LOGW(TAG,"sekunda");
+                shining();
                 sec++;
                 counter();
                 j = 0;
